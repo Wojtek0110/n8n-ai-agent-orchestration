@@ -70,16 +70,6 @@ The historical use case represented by the exports was the **Deckdrive starter-c
 
 Project handoff documents dated **20–24 October 2026** record the task as `COMPLETE` after human review and report that the integrated game passed its full test runner plus manual single-player and two-player checks (integrated in **[Deckdrive PR #31](https://github.com/Wojtek0110/deckdrive/pull/31)**). These are **historical project records**, not tests re-executed by this portfolio repository. See [case study](docs/case-study.md) for what was delivered, what was measured, and what remains out of scope.
 
-## Where Data & AI skills appear
-
-This is an **applied AI / automation engineering** project, not a machine-learning training project or an ETL pipeline. The relevant transferable skills are:
-
-- **AI agent systems:** constrain automated code-generation with explicit permissions, state transitions, and review gates.
-- **Structured data handling:** validate HTTP/JSON responses, interpret task lifecycle fields and quota measurements, and reject malformed inputs.
-- **Integration engineering:** orchestrate n8n, a custom HTTP Worker, a local Node.js quota probe, Git worktrees, automated tests, and SMTP.
-- **Production-minded operations:** design fail-closed paths, recoverable checkpoints, and operational visibility instead of treating a successful API call as proof of success.
-
-**Tech stack:** `n8n` · `JavaScript` (Code nodes) · `REST/HTTP` · `JSON` · `Node.js` quota probe (external dependency) · `OpenAI Codex` · `Git`/worktrees · `Godot` test automation · `SMTP`
 
 ## Explore the repository
 
