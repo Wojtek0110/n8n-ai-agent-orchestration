@@ -1,0 +1,122 @@
+{
+  "name": "Technical Error Alerts — portfolio demo (INACTIVE)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        32,
+        352
+      ],
+      "id": "4d8bb6fe-ad01-5fbf-a4f9-7b773e96fbee",
+      "name": "ERROR TRIGGER — automatic executions"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Error Trigger payload depends on the failing node/trigger type.\n// Send concise diagnostic context, NOT raw execution data, credentials or HTTP bodies.\nconst x = $input.first().json || {};\nconst exec = x.execution || {};\nconst wf = x.workflow || {};\nconst trig = x.trigger || {};\nconst raw = exec.error?.message || trig.error?.message || x.error?.message || 'Unknown workflow error';\nconst msg = String(raw).replace(/[\\r\\n]+/g, ' ').slice(0,1000);\nconst id = String(exec.id || 'N/A');\nconst name = String(wf.name || 'Unknown workflow').slice(0,120);\nconst node = String(exec.lastNodeExecuted || trig.node?.name || 'N/A').slice(0,120);\nconst when = new Date().toISOString();\nreturn [{json:{email_subject:`[Deckdrive] AWARIA n8n — ${name}`,\n  email_body:[\n    'DECKDRIVE — BLAD TECHNICZNY WORKFLOW', '',\n    `Workflow: ${name}`, `Node: ${node}`, `Execution ID: ${id}`, `Time UTC: ${when}`,\n    `Blad: ${msg}`, '',\n    'Sprawdz n8n > Executions oraz Worker Task State /task/lock.',\n    'NIE uruchamiaj Codexa ponownie bez sprawdzenia stanu.',\n    'Uwaga: Error Trigger dziala dla automatycznych wywolan, NIE manualnego Execute workflow.'\n  ].join('\\n')\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        352
+      ],
+      "id": "68c8fa8f-4195-55f1-889c-a1db0c749f8f",
+      "name": "Prepare Error Email"
+    },
+    {
+      "parameters": {
+        "fromEmail": "sender@example.com",
+        "toEmail": "alerts@example.com",
+        "subject": "={{ $json.email_subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.email_body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        544,
+        352
+      ],
+      "id": "106f60b0-7ca4-520f-95d1-a68b9b4f42f2",
+      "name": "SEND ERROR EMAIL (SMTP account)",
+      "notes": "Public export: example addresses only. No SMTP credentials included. Do not activate."
+    },
+    {
+      "parameters": {
+        "jsCode": "const n=$input.first().json; return [{json:{mail_dispatched:true,message_id:n.messageId || null}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        352
+      ],
+      "id": "db148d81-ac38-5e3c-ba93-6614f88631b5",
+      "name": "Error Mail Sent"
+    },
+    {
+      "parameters": {
+        "content": "### Public portfolio export — INACTIVE\nExample SMTP node has no credentials and uses example.com addresses. n8n Error Trigger applies to automatic executions; no production connections included.",
+        "height": 270,
+        "width": 650,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "206bfb3c-e36b-572f-9c5e-b01efa840d8b",
+      "name": "ERROR handler instructions"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "ERROR TRIGGER — automatic executions": {
+      "main": [
+        [
+          {
+            "node": "Prepare Error Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Error Email": {
+      "main": [
+        [
+          {
+            "node": "SEND ERROR EMAIL (SMTP account)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEND ERROR EMAIL (SMTP account)": {
+      "main": [
+        [
+          {
+            "node": "Error Mail Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

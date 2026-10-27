@@ -1,0 +1,656 @@
+{
+  "name": "AI Agent Orchestrator — portfolio demo (DISABLED)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        576
+      ],
+      "id": "9e316cd8-be86-5770-ac6a-5e86bb87cf7d",
+      "name": "Start Task"
+    },
+    {
+      "parameters": {
+        "jsCode": "// PORTFOLIO-DEMO-001 — SAFE PREVIEW. DO NOT ENABLE EXECUTE WITHOUT HUMAN APPROVAL.\nconst task = {\n  \"task_id\": \"PORTFOLIO-DEMO-001\",\n  \"run_mode\": \"PREVIEW_ONLY\",\n  \"approved_for_execution\": false,\n  \"expected_branch\": \"agent/portfolio-demo\",\n  \"approved_manual_gates\": [],\n  \"stages\": [\n    {\n      \"id\": \"CARD13.1\",\n      \"title\": \"Card catalog and instance identity\",\n      \"goal\": \"Parse and validate the exact CSV data, construct five typed definitions and a 13-instance starter deck; support fixed and current-Fuel (`X`) costs without representing X as numeric zero. Preserve display metadata separately from runtime semantics.\",\n      \"acceptance_criteria\": [\n        \"A001×5, A002×2, A003×3, A004×2, A005×1\",\n        \"unique instance IDs\",\n        \"robust CSV comma/quote handling, including keyword labels and whitespace\",\n        \"tested failures for duplicate IDs, invalid cost/copies and malformed data\",\n        \"all existing tests pass. No HUD changes.\"\n      ],\n      \"initial_iteration_goal\": \"Inspect existing `CardDefinition`, `CardState`, CSV and their tests. Implement the smallest testable improvement (no more than four files) toward the typed catalog; run focused tests. Do not try to finish the entire STAGE in one iteration by bypassing the file budget.\",\n      \"manual_gate_after\": false\n    },\n    {\n      \"id\": \"CARD13.2\",\n      \"title\": \"Per-player draw, hand, discard and reshuffle\",\n      \"goal\": \"Implement the approved card lifecycle for each PlayerState with seeded shuffle: five cards at the beginning of the player's round, discard of remaining cards on End Turn, reshuffle discard when draw becomes empty mid-draw, no generation of nonexistent cards.\",\n      \"acceptance_criteria\": [\n        \"13 cards accounted for at all times except explicitly used special cases\",\n        \"five-card base draw\",\n        \"partial refill correctly combines old draw + shuffled discard\",\n        \"End Turn discards unused cards and preserves normal WORLD scheduling\",\n        \"separate player data with a minimal ownership regression\",\n        \"full suite passes.\"\n      ],\n      \"initial_iteration_goal\": \"Inspect existing player/card-zone and turn-flow state. Add one coherent per-player deck/zone lifecycle component or regression slice, within four files; run focused tests.\",\n      \"manual_gate_after\": false\n    },\n    {\n      \"id\": \"CARD13.3\",\n      \"title\": \"Reusable effect composition, card-play transaction, Fuel\",\n      \"goal\": \"Implement the core typed effect plan/executor and generic play-card transaction, independent of HUD. A card definition references ordered effects and parameters; selecting parameters is not committing play. A player+card-instance+options command produces an explicit result. Support fixed costs and X=current Fuel at confirmation.\",\n      \"acceptance_criteria\": [\n        \"only active player's owned hand instance can be played\",\n        \"insufficient fixed Fuel rejects with no mutation/priority change\",\n        \"successful play charges before any effect and discards exactly once\",\n        \"impossible subeffects are skipped while remaining effects execute\",\n        \"accepted zero-effect plays count as successful\",\n        \"duplicate play requests cannot execute twice\",\n        \"no parsing of description or gameplay logic in HUD\",\n        \"full suite passes.\"\n      ],\n      \"initial_iteration_goal\": \"Introduce one minimal typed command/result or executable effect contract with focused tests. Avoid overbuilding a speculative effect framework and keep existing authored movement untouched.\",\n      \"manual_gate_after\": false\n    },\n    {\n      \"id\": \"CARD13.4\",\n      \"title\": \"Drive keyword and automatic legal Next JunctionIntent\",\n      \"goal\": \"Use existing authored-drive for `Drive(N)` (including curves, collisions, tile interactions, Shop and terminal Finish); supply a prepared, stable random legal `Next JunctionIntent` for the actual next branching junction and reroll only after commitment.\",\n      \"acceptance_criteria\": [\n        \"Drive 1/2/3 distances follow authored RoadBase cells, existing routed curves and committed junctions\",\n        \"illegal random junction directions never appear\",\n        \"current intent remains stable until committed/changed by a card\",\n        \"entering a junction commits intent and prepares the following junction's legal intent without changing active turn\",\n        \"forced single-route continuations do not consume intent\",\n        \"interrupted/non-executable Drive respects approved skip rule and Finish exception\",\n        \"Green City-specific deterministic tests and full suite pass.\"\n      ],\n      \"initial_iteration_goal\": \"Inspect the actual authored route planner, curve/junction route state and Green City junction tests. Implement a small focused legal-intent lookup/draw or Drive adapter with tests; do not replace the authored path planner.\",\n      \"manual_gate_after\": false\n    },\n    {\n      \"id\": \"CARD13.5\",\n      \"title\": \"Intent Change keyword\",\n      \"goal\": \"Implement `Intent Change(direction)` for a prepared next branching junction (not the already committed junction route); expose only legal options and preserve the changed intent if Drive enters the junction within the same card.\",\n      \"acceptance_criteria\": [\n        \"only real legal next-junction alternatives returned\",\n        \"chosen intent is applied before the subsequent Drive effect\",\n        \"active committed turn is unchanged\",\n        \"future next intent prepared per CARD13.4\",\n        \"focused deterministic tests on actual Green City topology and full suite pass.\"\n      ],\n      \"initial_iteration_goal\": \"Add a typed query/command for legal next-junction options and state transition, with focused tests. Do not implement HUD selector.\",\n      \"manual_gate_after\": false\n    },\n    {\n      \"id\": \"CARD13.6\",\n      \"title\": \"Lane Switch keyword and shared lane topology\",\n      \"goal\": \"Implement lateral movement to one legal adjacent lane, at the same longitudinal level, using shared authored lane topology for player and civilians. Allow switching during curves and junctions, rebasing remaining active route; preserve committed turn and entered-cell interactions. Support civilians choosing randomly between both available lanes in their standard prepared WORLD plan.\",\n      \"acceptance_criteria\": [\n        \"correct left/right relative to facing\",\n        \"one/two/zero adjacent lane cases\",\n        \"one-lane road skips only Lane Switch, not subsequent Drive\",\n        \"switch does not consume forward Drive distance\",\n        \"entered side cell resolves collisions/rewards\",\n        \"curve/junction continuation follows new lane without reverting\",\n        \"civilian random left/right is seeded and plans stay stable until WORLD\",\n        \"Green City tests and full suite pass.\"\n      ],\n      \"initial_iteration_goal\": \"Inspect road-group data, active route state and current civilian lane-change resolver. Extract or extend one shared topology query with tests; do not add card-specific duplicate lane logic.\",\n      \"manual_gate_after\": false\n    },\n    {\n      \"id\": \"CARD13.7\",\n      \"title\": \"Honk keyword and civilian WORLD-plan replacement\",\n      \"goal\": \"Implement non-UI `Honk` reusable effect with **bounded known-route targeting** and immediate civilian response. Search nearest civilian ahead along the player's current lane to the nearest branching junction, and the immediately following road using the **already existing** JunctionIntent/committed route and corresponding lane; never continue past the next junction or roll unknown future intents. No fixed tile-count range on those two segments.\",\n      \"acceptance_criteria\": [\n        \"target chosen by traversal order, not geometric proximity; other lanes ignored\",\n        \"after next road no further search\",\n        \"one adjacent lane -> move, both -> seeded random choice, none -> remove\",\n        \"empty Honk still successful and produces a domain event suitable for future sound\",\n        \"if moved, invalidate old prepared WORLD plan and save a new legal FORWARD_1/FORWARD_2 plan, or STAY if neither possible (never Lane Change)\",\n        \"no hidden WORLD reroll\",\n        \"tests for actual route across junctions, civilian plan stability, no-target and full suite.\"\n      ],\n      \"initial_iteration_goal\": \"Create a side-effect-free query to find a honk target on known authored route, with deterministic tests. Do not generate arbitrary future intents.\",\n      \"manual_gate_after\": false\n    },\n    {\n      \"id\": \"CARD13.8\",\n      \"title\": \"Assemble all five cards from shared keywords\",\n      \"goal\": \"Bind catalog card IDs to reusable effect sequences with player-option parameters. A001: select Drive 1/2/3. A002: auto-skip absent/obvious lane choice then Lane Switch → Drive 1/2. A003: Intent Change → Drive 1/2. A004: Honk → Drive 1. A005: charge all Fuel X, then repeat the **whole** `(Honk → Drive 3)` sequence X times; at X=0 accepted card-to-discard with zero effects.\",\n      \"acceptance_criteria\": [\n        \"all 13 starter instances use the five correct templates\",\n        \"exactly the approved legal selectors/options\",\n        \"no duplicate keyword implementations in per-card scripts\",\n        \"A005 X=0/1/2/3 repeats full sequence, reacquires Honk target each time, stops after terminal Finish\",\n        \"an unavailable component is skipped, remaining sequence continues\",\n        \"targeted tests and full suite pass.\"\n      ],\n      \"initial_iteration_goal\": \"Compose and test A001 plus one additional simple template from the shared mechanics. Continue later iterations until all five templates pass.\",\n      \"manual_gate_after\": false\n    },\n    {\n      \"id\": \"CARD13.9\",\n      \"title\": \"Stable read/write gameplay ↔ HUD boundary\",\n      \"goal\": \"Expose a small presentation-neutral projection of hand/card IDs/definitions/Fuel, prepared intent, legal choices and play eligibility; commands for play with selected options and explicit success/rejection. `End Turn` is a domain command. No `game/ui/**` modifications. UI is responsible for drag/release, discover selectors, right-click cancellation *before* final commit; backend stays unchanged until final confirmation.\",\n      \"acceptance_criteria\": [\n        \"immutable/read-only DTO or typed query surface sufficient to draw CardView/HandView\",\n        \"explicit player/card-instance identity and typed selected options\",\n        \"legal lane/intent/distance options reported consistently with execution\",\n        \"play success/failure and updated state can be observed without UI manually subtracting Fuel or moving cards\",\n        \"no double play\",\n        \"acceptance/rejection, cancelling-before-submit and state-projection tests\",\n        \"full suite.\"\n      ],\n      \"initial_iteration_goal\": \"Stabilize and test the minimal projection/request/result surface already introduced earlier; do not implement visual HUD or input handling.\",\n      \"manual_gate_after\": false\n    },\n    {\n      \"id\": \"CARD13.10\",\n      \"title\": \"1P Green City card-driven match loop and integration-ready handoff\",\n      \"goal\": \"Wire backend lifecycle into authored Green City match (1P first): start, draw five, legal card play, End Turn, WORLD, next draw; preserve start menu and existing 2P behavior. Provide a callable domain gameplay entrypoint for the human HUD integration branch. Avoid new temporary UI beyond existing debug facilities, and do not wire `game/ui/**`.\",\n      \"acceptance_criteria\": [\n        \"fully automated end-to-end tests drive meaningful 1P rounds through the new card commands, without relying on debug movement keys\",\n        \"hand/Fuel/discard/world update as specified, including multi-round reshuffle\",\n        \"accepted card actions do not trigger WORLD prematurely and End Turn does\",\n        \"authored map, collisions, civilian plans, Finish, Danger Zone and existing still-valid 2P regressions pass\",\n        \"game start/menu remain functional\",\n        \"full `run_tests.bat` passes\",\n        \"report exact HUD-facing API, touched files, remaining integration tasks and verified tests without claiming the unintegrated HUD has been manually tested.\"\n      ],\n      \"initial_iteration_goal\": \"Inspect the current 1P authored gameplay bootstrap and card APIs; implement one minimal end-to-end, headless card-driven scenario (or required wiring slice) with focused tests. Keep the existing human HUD out of scope.\",\n      \"manual_gate_after\": false\n    }\n  ]\n};\n\nif (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/.test(task.task_id)) throw new Error('Invalid task_id.');\nif (!Array.isArray(task.stages) || task.stages.length === 0) throw new Error('Task must have stages.');\nconst ids = new Set();\nfor (const stage of task.stages) {\n  if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/.test(stage.id) || ids.has(stage.id)) {\n    throw new Error('Stage IDs must be unique and Worker-compatible.');\n  }\n  ids.add(stage.id);\n  if (!stage.goal?.trim() || !stage.initial_iteration_goal?.trim() ||\n      !Array.isArray(stage.acceptance_criteria) || stage.acceptance_criteria.length < 1 ||\n      stage.acceptance_criteria.length > 20 ||\n      stage.acceptance_criteria.some(c => typeof c !== 'string' || !c.trim())) {\n    throw new Error(`Invalid approved stage definition: ${stage.id}`);\n  }\n  if (typeof stage.manual_gate_after !== 'boolean') throw new Error('Manual gate must be boolean.');\n}\nif (task.run_mode !== 'PREVIEW_ONLY' && task.run_mode !== 'EXECUTE') throw new Error('Bad run_mode.');\nif (task.run_mode === 'EXECUTE' && task.approved_for_execution !== true) {\n  throw new Error('Real execution requires explicit approved_for_execution=true.');\n}\nif (task.run_mode === 'EXECUTE' && (task.task_id.startsWith('DD-ORCH-PREVIEW') ||\n    task.stages.some(s => s.id.startsWith('AUTO.')))) {\n  throw new Error('Replace the demo Task Spec before enabling EXECUTE.');\n}\nif (!Array.isArray(task.approved_manual_gates) ||\n    task.approved_manual_gates.some(x => !ids.has(x))) {\n  throw new Error('Invalid manual-gate approvals.');\n}\nreturn [{json: task}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        576
+      ],
+      "id": "2257ee5d-ea9c-5d4b-9ae3-a4dcbb1f9822",
+      "name": "Task Spec — PREVIEW ONLY",
+      "notes": "PUBLIC DEMO: Historical stage plan retained for illustration. Task ID, branch and approval flags deliberately changed. Worker action is neutralized.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "url": "http://127.0.0.1:47834/preflight",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 1600000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        624,
+        576
+      ],
+      "id": "4e672bd3-03f4-5157-9ad5-7772ed5c9c9d",
+      "name": "Worker Preflight"
+    },
+    {
+      "parameters": {
+        "url": "={{ 'http://127.0.0.1:47834/task/status/' + $('Task Spec — PREVIEW ONLY').first().json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 1600000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        880,
+        576
+      ],
+      "id": "9e0a0272-deb4-56a3-a85e-788b5056c728",
+      "name": "Read Worker Task State"
+    },
+    {
+      "parameters": {
+        "jsCode": "const spec = $('Task Spec — PREVIEW ONLY').first().json;\n// Worker Preflight is configured to return the full HTTP response (statusCode + body).\n// Normalize it before checking the Worker's fields.\nconst preflightResponse = $('Worker Preflight').first().json;\nconst preflight = preflightResponse?.body && typeof preflightResponse.body === 'object'\n  ? preflightResponse.body\n  : preflightResponse;\nconst raw = $input.first().json;\nconst stop = (workflow_status, message, extra = {}) => [{json:{action:'STOP',workflow_status,message,\n  task_id:spec.task_id,...extra}}];\nconst invalid = (message) => stop('HUMAN_REQUIRED',message);\nconst iterationLabel = (value) => {\n  let n = value;\n  let s = '';\n  do {s = String.fromCharCode(65 + n % 26) + s; n = Math.floor(n / 26) - 1;} while (n >= 0);\n  return s;\n};\nconst nextOrdinal = (stageId, last) => {\n  if (!last || !last.iteration_id) return 0;\n  const prefix = `${stageId}.`;\n  if (!last.iteration_id.startsWith(prefix)) throw new Error('Last iteration does not match current stage.');\n  const part = last.iteration_id.slice(prefix.length);\n  if (!/^[A-Z]+$/.test(part)) throw new Error('Invalid iteration label.');\n  let n = 0;\n  for (const c of part) n = n * 26 + (c.charCodeAt(0) - 64);\n  return n;\n};\nconst chooseStage = (stage, iterationNumber, isRepair, repairReason = '') => {\n  const iterationId = `${stage.id}.${iterationLabel(iterationNumber)}`;\n  const goal = isRepair\n    ? `Repair the last failing focused/full suite. Worker failure: ${String(repairReason || 'See verified history').slice(0, 800)}. Diagnose the cause, change at most four files in this iteration and run focused tests. If blocked, report HUMAN_REQUIRED. Continue following approved STAGE criteria.`\n    : iterationNumber === 0\n      ? stage.initial_iteration_goal\n      : 'Continue the approved STAGE from the verified Worker history and current repository. Choose ONE small cohesive technical substep (at most four files) toward the acceptance criteria; fix any focused failures before new features. Report ITERATION_DONE if more work remains, STAGE_READY only when all criteria are met.';\n  const payload = {\n    dry_run: spec.run_mode !== 'EXECUTE',\n    task_id: spec.task_id,\n    stage_id: stage.id,\n    iteration_id: iterationId,\n    expected_branch: preflight.branch,\n    expected_head: preflight.head,\n    stage_goal: stage.goal,\n    acceptance_criteria: stage.acceptance_criteria,\n    iteration_goal: goal\n  };\n  return [{json:{action:'HTTP',task_id:spec.task_id,operation:'ITERATION',\n    route:'/task/iteration',confirm:'task-iteration',payload,\n    stage_id:stage.id,iteration_id:iterationId}}];\n};\nconst chooseValidation = () => [{json:{action:'HTTP',task_id:spec.task_id,\n  operation:'VALIDATE_STAGE',route:'/task/validate-stage',confirm:'task-validate-stage',\n  payload:{dry_run:spec.run_mode !== 'EXECUTE', task_id:spec.task_id}}}];\n\nif (Number.isInteger(preflightResponse?.statusCode) && preflightResponse.statusCode !== 200) {\n  return invalid(`Worker preflight returned HTTP ${preflightResponse.statusCode}.`);\n}\nif (preflight.status !== 'ok' || preflight.task_orchestrator_api !== true ||\n    preflight.test_runner_present !== true || preflight.codex_agent_jobs !== true) {\n  return invalid(`Worker preflight invalid: status=${String(preflight.status)}, orchestrator=${String(preflight.task_orchestrator_api)}, test_runner=${String(preflight.test_runner_present)}, codex=${String(preflight.codex_agent_jobs)}.`);\n}\nif (preflight.repository !== 'C:\\\\PATH\\\\agent_worktree' ||\n    preflight.branch !== spec.expected_branch || !/^[0-9a-f]{40}$/i.test(preflight.head || '')) {\n  return invalid('Worker is not using the approved agent repo/branch/HEAD.');\n}\nif (!raw || !Number.isInteger(raw.statusCode) || typeof raw.body !== 'object') {\n  return invalid('Invalid task-status HTTP response.');\n}\nconst body = raw.body;\nif (raw.statusCode === 400 && body?.message === 'Task State does not exist.') {\n  if (preflight.clean !== true) return invalid('New TASK requires a clean agent worktree.');\n  return chooseStage(spec.stages[0],0,false);\n}\nif (raw.statusCode !== 200 || body.status !== 'ok' || body.task_id !== spec.task_id) {\n  return invalid(`Task-status HTTP failed (${raw.statusCode}): ${body?.message || 'invalid response'}`);\n}\nconst completed = body.completed_stages;\nif (!Array.isArray(completed) || completed.length > spec.stages.length ||\n    completed.some((id, i) => id !== spec.stages[i].id)) {\n  return invalid('Completed STAGES do not match the approved plan in order.');\n}\nif (body.iteration_id !== null) {\n  return stop('RECOVERY_REQUIRED',`Interrupted or active iteration ${body.iteration_id}; inspect /task/lock and approve explicit resume.`,\n    {recovery:body.recovery});\n}\nif (body.task_status === 'STAGE_VALIDATING') {\n  return stop('RECOVERY_REQUIRED','Interrupted or active STAGE validation: inspect the lock and explicitly resume validation.',\n    {recovery:body.recovery});\n}\nif (body.recovery?.worktree_status !== 'MATCHES_CHECKPOINT') {\n  return invalid(`Worktree needs inspection before continuing: ${body.recovery?.worktree_status || 'unknown'}.`);\n}\nif (['HUMAN_REQUIRED','SYNC_REQUIRED','FAILED'].includes(body.task_status)) {\n  return stop(body.task_status,`Worker stopped: ${body.task_status}. Human action required.`);\n}\nif (body.task_status === 'STAGE_READY') {\n  if (body.next_action !== 'VALIDATE_STAGE_FULL_SUITE') return invalid('Unexpected STAGE_READY transition.');\n  return chooseValidation();\n}\nif (body.task_status === 'STAGE_PASSED') {\n  if (body.completed_stages.length === 0 ||\n      body.stage_id !== body.completed_stages.at(-1)) {\n    return invalid('STAGE_PASSED is inconsistent with completed stages.');\n  }\n  const finishedStage = spec.stages[completed.length - 1];\n  if (finishedStage.manual_gate_after && !spec.approved_manual_gates.includes(finishedStage.id)) {\n    return stop('MANUAL_TEST_REQUIRED',\n      `Manual gate after ${finishedStage.id}. Validate the branch and add the stage ID to approved_manual_gates only after approval.`,\n      {stage_id:finishedStage.id});\n  }\n  if (completed.length === spec.stages.length) {\n    return stop('READY_FOR_REVIEW','All approved STAGES passed full validation. Human review is required; no commit, merge or COMPLETE status is written automatically.');\n  }\n  return chooseStage(spec.stages[completed.length],0,false);\n}\nif (body.task_status === 'PENDING' && completed.length === 0 && !body.last_iteration) {\n  return chooseStage(spec.stages[0],0,false);\n}\nif (body.task_status === 'RUNNING') {\n  if (!['BEGIN_NEXT_ITERATION','BEGIN_REPAIR_ITERATION'].includes(body.next_action)) {\n    return invalid(`Unexpected RUNNING action: ${body.next_action}`);\n  }\n  const stage = spec.stages[completed.length];\n  if (!stage || body.stage_id !== stage.id || !body.last_iteration ||\n      body.last_iteration.iteration_id.split('.').length < 2) {\n    return invalid('RUNNING stage or last iteration is inconsistent with Task Spec.');\n  }\n  let ordinal;\n  try {ordinal=nextOrdinal(stage.id,body.last_iteration);} catch(e) {return invalid(e.message);}\n  return chooseStage(stage,ordinal,body.next_action === 'BEGIN_REPAIR_ITERATION',body.last_stage_validation?.reason || '');\n}\nreturn invalid(`Unsupported persisted Task status: ${body.task_status}`);\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        576
+      ],
+      "id": "8452e792-aedf-5082-b548-8116fa4acc70",
+      "name": "Decide Stage and Iteration"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "af044532-8a00-51f8-8d07-52ef1d6f952f",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "STOP",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1696,
+        512
+      ],
+      "id": "7a78e6b5-baf0-54e6-abc4-d89c54d3f2a6",
+      "name": "Stop Or Continue"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2848,
+        1040
+      ],
+      "id": "86b8e473-469d-59f1-9ebf-96457751f775",
+      "name": "Worker Task Action (BLOCKING)",
+      "notes": "PUBLIC DEMO SAFETY: Original Worker HTTP POST action deliberately replaced with No Operation. No Task State writes or agent execution are possible from this node.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const spec = $('Task Spec — PREVIEW ONLY').first().json;\nconst raw = $input.first().json;\nconst stop = (status, msg, data={}) => [{json:{continue_loop:false,workflow_status:status,\n  task_id:spec.task_id,message:msg,...data}}];\nif (!raw || !Number.isInteger(raw.statusCode) || !raw.body || typeof raw.body !== 'object') {\n  return stop('HUMAN_REQUIRED','Worker task-action HTTP returned an invalid response. Inspect Worker Task State.');\n}\nconst body = raw.body;\nif (raw.statusCode !== 200 || body.task_id !== spec.task_id) {\n  return stop('HUMAN_REQUIRED',\n    `Task action failed (${raw.statusCode}): ${body.message || body.reason || 'unexpected response'}. Inspect state before retry.`,\n    {worker_status:body.status || null});\n}\nif (spec.run_mode === 'PREVIEW_ONLY') {\n  const okay = ['DRY_RUN_OK','STAGE_VALIDATION_DRY_RUN_OK'].includes(body.status) &&\n    body.state_written === false && body.codex_started !== true && body.tests_started !== true;\n  if (!okay) return stop('HUMAN_REQUIRED','Preview did not return a verified no-write response.',{worker_response:body});\n  return stop('DRY_RUN_OK','Preview passed: no Codex invocation, task state change or test execution.',\n    {worker_response:body});\n}\nif (body.status === 'blocked' || body.validation_status === 'BLOCKED') {\n  return stop('HUMAN_REQUIRED',body.message || body.reason || 'Worker blocked execution.');\n}\nif (body.validation_status !== undefined) {\n  if (!['PASSED','FAILED'].includes(body.validation_status)) {\n    return stop('HUMAN_REQUIRED','Unexpected STAGE validation outcome.',{worker_response:body});\n  }\n  if (!['STAGE_PASSED','RUNNING'].includes(body.task_status)) {\n    return stop('HUMAN_REQUIRED','Unexpected TASK status after STAGE validation.',{worker_response:body});\n  }\n} else if (!['RUNNING','STAGE_READY','HUMAN_REQUIRED','SYNC_REQUIRED','FAILED'].includes(body.status)) {\n  return stop('HUMAN_REQUIRED','Unexpected iteration response.',{worker_response:body});\n}\nreturn [{json:{continue_loop:true,task_id:spec.task_id,worker_response:body}}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3072,
+        1040
+      ],
+      "id": "5b1715dc-00ca-568f-bdba-ec74320cdf40",
+      "name": "Evaluate Worker Response"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e8bb954c-b99a-530e-8cc7-2e75b5b9dec5",
+              "leftValue": "={{ $json.continue_loop }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3296,
+        1040
+      ],
+      "id": "f2113122-6a3a-55b6-a0ad-7329228440a1",
+      "name": "Continue Task Loop"
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $input.first().json;\nreturn [{json:{task_id:result.task_id, workflow_status:result.workflow_status || 'HUMAN_REQUIRED',\n  message:result.message || 'The workflow stopped.',\n  stage_id:result.stage_id || null,\n  iteration_id:result.iteration_id || null,\n  recovery:result.recovery || null,\n  last_accepted_iteration:result.last_accepted_iteration || null,\n  quota_info:result.quota_info || null,\n  worker_response:result.worker_response || null,\n  note:'The Worker owns Task State. No Git commit/push/merge is performed by this workflow.'}}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3600,
+        640
+      ],
+      "id": "63159cec-aad9-50a2-80cf-5283a69aec3b",
+      "name": "Final Result"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Readable snapshot before the long Worker HTTP request.\n// This DOES NOT claim the agent finished the iteration; it is the planned step.\nconst x = $input.first().json;\nconst spec = $('Task Spec — PREVIEW ONLY').first().json;\nconst workerState = $('Read Worker Task State').first().json;\nconst stageId = x.stage_id || x.payload?.stage_id || workerState?.body?.stage_id || null;\nconst st = spec.stages.find(s => s.id === stageId);\nconst title = st?.title || 'Stage full-suite validation';\nconst label = x.operation === 'VALIDATE_STAGE'\n  ? `${stageId || 'STAGE'} — full run_tests.bat validation`\n  : x.operation === 'ITERATION'\n    ? `${x.iteration_id} — ${title}`\n    : x.workflow_status || 'Stopped';\nreturn [{json:{...x, progress_label:label,\n  progress_phase:x.operation === 'ITERATION' ? 'PLANNED_ITERATION' :\n    x.operation === 'VALIDATE_STAGE' ? 'PLANNED_VALIDATION' : 'STOP',\n  progress_note:'This is a planned operation. The live Worker monitor shows current state.'}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        576
+      ],
+      "id": "e5d3eb3f-9c0e-5de7-99ff-70b5b9e7ebf4",
+      "name": "NEXT ACTION — stage.iteration + goal"
+    },
+    {
+      "parameters": {
+        "content": "### Public portfolio export — INACTIVE / NON-OPERATIONAL\nWorker POST action and quota shell command are replaced with No Operation nodes. This workflow must not be used to start an agent task. The historical Task Spec and decisions are shown for architecture review only.",
+        "height": 400,
+        "width": 465,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1b5024aa-7c5d-59ce-8725-509fa4dafef3",
+      "name": "INFO — Preview first"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Runs only AFTER the main TASK has already stopped at a controlled checkpoint.\n// No Worker endpoints are called; this branch ONLY prepares a status email.\nconst r = $input.first().json;\nconst status = String(r.workflow_status || 'UNKNOWN');\nconst important = new Set([\n  'MANUAL_TEST_REQUIRED', 'HUMAN_REQUIRED', 'SYNC_REQUIRED',\n  'RECOVERY_REQUIRED', 'READY_FOR_REVIEW', 'FAILED', 'COMPLETE',\n  'QUOTA_PAUSED', 'QUOTA_STATUS_UNKNOWN'\n]);\nconst send_email = important.has(status);\nconst stage = r.stage_id || r.worker_response?.stage_id || 'N/A';\nconst iteration = r.iteration_id || r.worker_response?.iteration_id || 'N/A';\nconst subjects = {\n  MANUAL_TEST_REQUIRED: 'TEST MANUALNY WYMAGANY',\n  HUMAN_REQUIRED: 'POTRZEBNA DECYZJA',\n  SYNC_REQUIRED: 'WYMAGANA SYNCHRONIZACJA',\n  RECOVERY_REQUIRED: 'WYMAGANE WZNOWIENIE',\n  READY_FOR_REVIEW: 'ZADANIE GOTOWE DO REVIEW',\n  FAILED: 'ZADANIE ZATRZYMANE BLĘDEM',\n  COMPLETE: 'ZADANIE ZAKONCZONE',\n  QUOTA_PAUSED: 'PAUZA — NISKI LIMIT CODEXA',\n  QUOTA_STATUS_UNKNOWN: 'PAUZA — NIEZNANY LIMIT CODEXA'\n};\nconst nextSteps = {\n  MANUAL_TEST_REQUIRED: 'Wykonaj uzgodnione testy manualne w Godocie. Nie zatwierdzaj bramki bez wyniku PASS.',\n  HUMAN_REQUIRED: 'Sprawdz Final Result, Worker Task State oraz logi. Podejmij decyzje przed ponownym uruchomieniem.',\n  SYNC_REQUIRED: 'Sprawdz zaleznosci miedzy branchami. Synchronizacja pozostaje operacja czlowieka.',\n  RECOVERY_REQUIRED: 'Sprawdz /task/lock i Task State. Nie uruchamiaj ponownie bez weryfikacji checkpointu.',\n  READY_FOR_REVIEW: 'Przejrzyj zmiany i testy. COMPLETE, commit i merge wymagaja osobnych decyzji czlowieka.',\n  FAILED: 'Sprawdz raport walidacji i przyczyne bledu. Nie zatwierdzaj STAGE.',\n  COMPLETE: 'Zadanie oznaczono jako ukonczone. Zweryfikuj zapis Workera.',\n  QUOTA_PAUSED: 'Zaczekaj na odnowienie limitow, sprawdz quota probe i uruchom orchestrator ponownie. Nie uruchomiono Codexa.',\n  QUOTA_STATUS_UNKNOWN: 'Sprawdz Execute Command i quota probe. Nie uruchomiono Codexa.'\n};\nconst line = String(r.message || '').replace(/[\\r\\n]+/g, ' ').slice(0, 900);\nconst task = String(r.task_id || 'PORTFOLIO-DEMO-001');\nconst subject = `[Deckdrive] ${task} — ${subjects[status] || status}`;\nconst body = [\n  'DECKDRIVE — POWIADOMIENIE Z ORCHESTRATORA', '',\n  `TASK: ${task}`,\n  `STAGE: ${stage}`,\n  `ITERATION: ${iteration}`,\n  ...(status.startsWith('QUOTA_') ? [\n    `OSTATNIA ZATWIERDZONA ITERACJA: ${r.last_accepted_iteration || 'brak danych'}`,\n    `NASTEPNA ITERACJA: ${r.iteration_id || 'brak danych'}`,\n    `LIMIT 5H POZOSTALO: ${r.quota_info?.five_hour?.remaining_percent ?? 'UNKNOWN'}%`,\n    `LIMIT TYGODNIOWY POZOSTALO: ${r.quota_info?.weekly?.remaining_percent ?? 'UNKNOWN'}%`,\n    `RESET 5H UTC: ${r.quota_info?.five_hour?.reset_at_utc || 'UNKNOWN'}`,\n    `RESET TYGODNIOWY UTC: ${r.quota_info?.weekly?.reset_at_utc || 'UNKNOWN'}`\n  ] : []),\n  `STATUS: ${status}`, '',\n  `Powod: ${line || 'Brak dodatkowego komunikatu.'}`, '',\n  `Nastepny krok: ${nextSteps[status] || 'Otworz n8n i sprawdz stan Workera.'}`, '',\n  'Ten e-mail jest powiadomieniem, NIE zatwierdzeniem human/manual gate.',\n  'Zrodlo prawdy: Worker Task State i wykonanie n8n.'\n].join('\\n');\nreturn [{json:{...r,send_email,email_subject:subject,email_body:body}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3840,
+        640
+      ],
+      "id": "82259d90-b9e6-515e-b100-fa9fce516af6",
+      "name": "Build Terminal Status Email"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6ebc572c-5ffb-4f05-9b94-49327496eabb",
+              "leftValue": "={{ $json.send_email }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4064,
+        640
+      ],
+      "id": "08c96ef8-670b-556c-8d70-bca889645be6",
+      "name": "NOTIFICATION REQUIRED?"
+    },
+    {
+      "parameters": {
+        "fromEmail": "sender@example.com",
+        "toEmail": "alerts@example.com",
+        "subject": "={{ $json.email_subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.email_body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        4272,
+        560
+      ],
+      "id": "8bd03847-f43f-5f63-be60-5c3ec2ab25ed",
+      "name": "SEND STATUS EMAIL (SMTP account)",
+      "notes": "Public export: example addresses only. No SMTP credentials included. Do not activate."
+    },
+    {
+      "parameters": {
+        "jsCode": "// The SMTP node returned successfully. Do not mistake SMTP acceptance for human approval.\nconst original = $('Build Terminal Status Email').first().json;\nconst smtp = $input.first().json;\nreturn [{json:{task_id:original.task_id,workflow_status:original.workflow_status,\n  stage_id:original.stage_id || null,iteration_id:original.iteration_id || null,\n  email_sent:true,notification_subject:original.email_subject,\n  smtp_message_id:smtp.messageId || null,\n  note:'SMTP send returned successfully; the Worker still owns Task State.'}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4512,
+        560
+      ],
+      "id": "e6d35901-3e69-5f29-bb05-3332635f363a",
+      "name": "Email Dispatch Summary"
+    },
+    {
+      "parameters": {
+        "jsCode": "// PREVIEW_ONLY and other non-final workflow stops intentionally send no email.\nconst x = $input.first().json;\nreturn [{json:{task_id:x.task_id,workflow_status:x.workflow_status,email_sent:false,\n  reason:'No email for PREVIEW_ONLY/non-notifiable status.'}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4272,
+        784
+      ],
+      "id": "f262c7ed-1d03-538a-a0ac-117eafc0b347",
+      "name": "No Email — Preview/Other"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b1ebb261-3a5b-4756-af0a-43fd21b934a9",
+              "leftValue": "={{ $json.operation === 'ITERATION' && !$json.payload?.dry_run }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4943531c-59d0-5d78-8105-2920f2c18510",
+      "name": "QUOTA — Needs Codex Check?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        624
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "c37734d1-0692-5a64-9f33-92cd9d2ece15",
+      "name": "QUOTA — Read Codex Limits",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        624
+      ],
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "notes": "PUBLIC DEMO SAFETY: Original local shell command / quota-probe execution deliberately replaced with No Operation.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Strict quota gate. Runs only for an actual Codex ITERATION (not dry-run/stage tests).\n// The Execute Command node replaces input with stdout: retrieve the latest planned action.\nconst planned = $('NEXT ACTION — stage.iteration + goal').last().json;\nconst workerReply = $('Read Worker Task State').last().json;\nconst state = workerReply?.body && typeof workerReply.body === 'object' ? workerReply.body : {};\nconst lastAccepted = state?.last_iteration?.iteration_id || null;\nconst command = $input.first()?.json || {};\nconst thresholds = { five_hour: 10, weekly: 5 };\nconst safePct = v => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 100;\nlet quota = null;\nlet problem = '';\nif (command.exitCode !== 0) {\n  problem = `Quota command did not succeed: exitCode=${String(command.exitCode ?? 'missing')}; ${String(command.error?.message || command.stderr || '').slice(0, 300)}`;\n} else {\n  try { quota = JSON.parse(command.stdout); }\n  catch (e) { problem = `Quota probe stdout is not valid JSON: ${e.message}`; }\n}\nif (!problem && (quota?.status !== 'CODEX_QUOTA_READ_OK' ||\n    !safePct(quota?.five_hour?.remaining_percent) ||\n    !safePct(quota?.weekly?.remaining_percent))) {\n  problem = 'Quota response lacks a valid 5-hour or weekly remaining_percent.';\n}\nconst outcome = !problem && (quota.five_hour.remaining_percent <= thresholds.five_hour ||\n  quota.weekly.remaining_percent <= thresholds.weekly) ? 'QUOTA_PAUSED' :\n  problem ? 'QUOTA_STATUS_UNKNOWN' : 'QUOTA_OK';\nif (outcome === 'QUOTA_OK') {\n  return [{json:{...planned,quota_allowed:true,quota_info:{five_hour:quota.five_hour,weekly:quota.weekly}}}];\n}\nconst reason = problem ||\n  `5h remaining=${quota.five_hour.remaining_percent}% (stop <=${thresholds.five_hour}%), weekly remaining=${quota.weekly.remaining_percent}% (stop <=${thresholds.weekly}%).`;\nreturn [{json:{quota_allowed:false,task_id:planned.task_id,\n  stage_id:planned.stage_id || null,iteration_id:planned.iteration_id || null,\n  workflow_status:outcome,message:reason,\n  last_accepted_iteration:lastAccepted,\n  quota_info:quota ? {five_hour:quota.five_hour,weekly:quota.weekly} : null,\n  note:'Codex iteration was NOT started. Worker Task State was not changed.'}}];"
+      },
+      "id": "11aca5d6-b4d7-55bb-a20d-4a98893f3863",
+      "name": "QUOTA — Evaluate Limits",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2352,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "36b04ed7-1320-4ea3-a2dc-8a8f6f4faff7",
+              "leftValue": "={{ $json.quota_allowed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c4d7283e-1ba4-5178-84a8-bbd480446b20",
+      "name": "QUOTA — Start Iteration?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2592,
+        624
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start Task": {
+      "main": [
+        [
+          {
+            "node": "Task Spec — PREVIEW ONLY",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task Spec — PREVIEW ONLY": {
+      "main": [
+        [
+          {
+            "node": "Worker Preflight",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Worker Preflight": {
+      "main": [
+        [
+          {
+            "node": "Read Worker Task State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Worker Task State": {
+      "main": [
+        [
+          {
+            "node": "Decide Stage and Iteration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decide Stage and Iteration": {
+      "main": [
+        [
+          {
+            "node": "NEXT ACTION — stage.iteration + goal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stop Or Continue": {
+      "main": [
+        [
+          {
+            "node": "Final Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "QUOTA — Needs Codex Check?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Worker Task Action (BLOCKING)": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Worker Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Worker Response": {
+      "main": [
+        [
+          {
+            "node": "Continue Task Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Continue Task Loop": {
+      "main": [
+        [
+          {
+            "node": "Read Worker Task State",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Final Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NEXT ACTION — stage.iteration + goal": {
+      "main": [
+        [
+          {
+            "node": "Stop Or Continue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Result": {
+      "main": [
+        [
+          {
+            "node": "Build Terminal Status Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Terminal Status Email": {
+      "main": [
+        [
+          {
+            "node": "NOTIFICATION REQUIRED?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NOTIFICATION REQUIRED?": {
+      "main": [
+        [
+          {
+            "node": "SEND STATUS EMAIL (SMTP account)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Email — Preview/Other",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SEND STATUS EMAIL (SMTP account)": {
+      "main": [
+        [
+          {
+            "node": "Email Dispatch Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QUOTA — Needs Codex Check?": {
+      "main": [
+        [
+          {
+            "node": "QUOTA — Read Codex Limits",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Worker Task Action (BLOCKING)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QUOTA — Read Codex Limits": {
+      "main": [
+        [
+          {
+            "node": "QUOTA — Evaluate Limits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QUOTA — Evaluate Limits": {
+      "main": [
+        [
+          {
+            "node": "QUOTA — Start Iteration?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QUOTA — Start Iteration?": {
+      "main": [
+        [
+          {
+            "node": "Worker Task Action (BLOCKING)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Final Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

@@ -1,0 +1,225 @@
+{
+  "name": "Read-only Task Monitor — portfolio demo (INACTIVE)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        432
+      ],
+      "id": "cb442ae8-b840-5d32-b9cb-b5ca0d26b3ed",
+      "name": "START LIVE MONITOR"
+    },
+    {
+      "parameters": {
+        "jsCode": "// READ-ONLY monitor for PORTFOLIO-DEMO-001. Never starts Codex or writes Worker Task State.\n// Start this monitor after the main EXECUTE task has created its Worker Task State.\nconst stage_titles = {\n  'CARD13.1': 'Card catalog and instance identity',\n  'CARD13.2': 'Per-player draw, hand, discard and reshuffle',\n  'CARD13.3': 'Reusable effect composition, card-play transaction, Fuel',\n  'CARD13.4': 'Drive keyword and automatic legal Next JunctionIntent',\n  'CARD13.5': 'Intent Change keyword',\n  'CARD13.6': 'Lane Switch keyword and shared lane topology',\n  'CARD13.7': 'Honk keyword and civilian WORLD-plan replacement',\n  'CARD13.8': 'Assemble all five cards from shared keywords',\n  'CARD13.9': 'Stable read/write gameplay ↔ HUD boundary',\n  'CARD13.10': '1P Green City card-driven match loop and integration-ready handoff',\n};\nreturn [{json:{\n  task_id:'PORTFOLIO-DEMO-001',\n  worker_base_url:'http://127.0.0.1:47834',\n  poll_seconds:15,\n  started_at:new Date().toISOString(),\n  max_monitor_minutes:360,\n  stage_titles,\n  stage_order:Object.keys(stage_titles),\n  stage_count:Object.keys(stage_titles).length\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        432
+      ],
+      "id": "eea2dc30-2090-5429-9b14-017d1a782b61",
+      "name": "Monitor Settings"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Monitor Settings').first().json.worker_base_url + '/task/status/' + $('Monitor Settings').first().json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 20000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        416,
+        432
+      ],
+      "id": "dd9474f5-f985-5105-8e16-38268622edb9",
+      "name": "READ Worker status (15 s polling)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Monitor Settings').first().json;\nconst raw = $input.first().json;\nconst body = raw?.body && typeof raw.body === 'object' ? raw.body : raw;\nconst observed_at = new Date().toISOString();\nconst http_status = Number(raw?.statusCode ?? 0);\nconst elapsed = (Date.now() - new Date(cfg.started_at).getTime()) / 60000;\nconst result = (details) => [{json:{task_id:cfg.task_id,observed_at,http_status,...details}}];\n// Read-only; if run too early, stop without creating a task.\nif ([400,404].includes(http_status) && body?.message === 'Task State does not exist.') {\n  return result({status:'NOT_STARTED',progress_label:'No Worker Task State yet; run the main EXECUTE workflow first',monitoring:false});\n}\nif (http_status !== 200 || body?.status !== 'ok' || body?.task_id !== cfg.task_id) {\n  return result({status:'MONITOR_ERROR',progress_label:'Cannot read authorized Worker Task State',\n    reason:String(body?.message || body?.reason || 'unexpected status').slice(0,350),monitoring:false});\n}\nconst completed = Array.isArray(body.completed_stages) ? body.completed_stages : [];\nconst active = typeof body.iteration_id === 'string' && body.iteration_id.trim()\n  ? body.iteration_id : null;\nconst last = body.last_iteration && typeof body.last_iteration === 'object' ? body.last_iteration : null;\nconst stageId = body.stage_id || (active ? active.replace(/\\.[A-Z]+$/,'') : null) ||\n  cfg.stage_order[Math.min(completed.length, cfg.stage_order.length-1)];\nconst stageTitle = cfg.stage_titles[stageId] || stageId || 'Unknown stage';\nconst lastId = last?.iteration_id || null;\nconst lastTitle = last?.change_title || last?.short_change_title || last?.title || null;\nconst lastLabel = lastId ? `${lastId} — ${lastTitle || (cfg.stage_titles[lastId.replace(/\\.[A-Z]+$/,'')] || 'last iteration')}` : null;\nconst reportedTitle = body.current_iteration_title || body.iteration_title ||\n  (typeof body.current_iteration?.change_title === 'string' ? body.current_iteration.change_title : null);\nconst progressLabel = active\n  ? `${active} — ${reportedTitle || stageTitle}`\n  : body.task_status === 'STAGE_VALIDATING'\n    ? `${stageId} — full test suite validation`\n    : body.task_status === 'STAGE_READY'\n      ? `${stageId} — stage ready for Worker validation`\n      : body.task_status === 'STAGE_PASSED'\n        ? `${stageId} — stage passed`\n        : lastLabel || `${stageId} — ${stageTitle}`;\nconst complete = completed.length === cfg.stage_count &&\n  cfg.stage_order.every((id,i) => completed[i] === id);\nlet publicStatus = body.task_status || 'UNKNOWN';\nif (complete && body.task_status === 'COMPLETE') publicStatus = 'COMPLETE';\nelse if (complete && body.task_status === 'STAGE_PASSED') publicStatus = 'READY_FOR_REVIEW';\nelse if (active) publicStatus = 'CODEX_ITERATION_ACTIVE';\nelse if (body.task_status === 'STAGE_VALIDATING') publicStatus = 'FULL_SUITE_ACTIVE';\nconst terminal = (complete && ['STAGE_PASSED','COMPLETE'].includes(body.task_status)) ||\n  ['COMPLETE','HUMAN_REQUIRED','SYNC_REQUIRED','FAILED','RECOVERY_REQUIRED'].includes(body.task_status);\nconst keepPolling = !terminal && elapsed < cfg.max_monitor_minutes;\nreturn result({\n  status:elapsed >= cfg.max_monitor_minutes && !terminal ? 'MONITOR_TIME_LIMIT' : publicStatus,\n  progress_label:progressLabel,\n  active_iteration_id:active,\n  current_title_source:active ? (reportedTitle ? 'WORKER_REPORTED' : 'STAGE_FALLBACK') : 'NOT_ACTIVE',\n  current_stage_id:stageId,\n  current_stage_title:stageTitle,\n  last_completed_iteration:lastLabel,\n  completed_stages:completed,\n  stage_count:cfg.stage_count,\n  next_action:body.next_action || null,\n  last_stage_validation:body.last_stage_validation?.validation_status || body.last_stage_validation?.status || null,\n  raw_task_status:body.task_status,\n  manual_gate_required:false,\n  elapsed_minutes:Math.round(elapsed*10)/10,\n  monitoring:keepPolling,\n  summary:publicStatus === 'READY_FOR_REVIEW'\n    ? 'All ten stages passed. Await separate final HUMAN review before COMPLETE.'\n    : terminal ? 'Monitoring stopped; inspect Worker Task State before further action.'\n    : 'Read-only polling. No changes executed.'\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        432
+      ],
+      "id": "54ee4ce9-ca0b-5967-8ff3-5e331411318e",
+      "name": "LIVE STATUS — CARD13.1–CARD13.10"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a71f8392-2ab2-4de1-b63c-69e4e7c75500",
+              "leftValue": "={{ $json.monitoring }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        992,
+        432
+      ],
+      "id": "857a8018-7ee7-53b9-8740-b91b15bdd601",
+      "name": "KEEP POLLING?"
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        480
+      ],
+      "id": "b2c004f0-2aef-58e8-b969-7de8e8be934b",
+      "name": "WAIT 15 SECONDS"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json:{...$input.first().json,monitoring:false,note:'Read-only monitor finished. It never changes Worker Task State.'}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        768
+      ],
+      "id": "4bc01221-e698-5c42-89e0-23978b46be13",
+      "name": "MONITOR STOPPED"
+    },
+    {
+      "parameters": {
+        "content": "### Public portfolio export — INACTIVE\nRead-only monitor architecture shown for educational use. Requires your own authorized Worker API. Do not activate this historical demo workflow.",
+        "height": 335,
+        "width": 460,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3f74bc5a-3616-5f46-9ed8-c834c6ef0ac3",
+      "name": "INFO — monitor only"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "START LIVE MONITOR": {
+      "main": [
+        [
+          {
+            "node": "Monitor Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monitor Settings": {
+      "main": [
+        [
+          {
+            "node": "READ Worker status (15 s polling)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "READ Worker status (15 s polling)": {
+      "main": [
+        [
+          {
+            "node": "LIVE STATUS — CARD13.1–CARD13.10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KEEP POLLING?": {
+      "main": [
+        [
+          {
+            "node": "WAIT 15 SECONDS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MONITOR STOPPED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WAIT 15 SECONDS": {
+      "main": [
+        [
+          {
+            "node": "READ Worker status (15 s polling)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LIVE STATUS — CARD13.1–CARD13.10": {
+      "main": [
+        [
+          {
+            "node": "KEEP POLLING?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
