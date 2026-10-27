@@ -39,6 +39,15 @@ flowchart TD
     E[n8n Error Trigger] --> A[Technical failure email]
 ```
 
+### Original n8n Orchestrator
+
+The main orchestration workflow coordinates task progression, quota checks, Worker API calls, automated validation, and notifications.
+
+![Original n8n Orchestrator](assets/orchestrator.png)
+
+*Screenshot from the operational system. The publicly shared workflow exports are sanitized and intentionally disabled.*
+
+
 **Separation of responsibilities:** n8n orchestrates; the **Worker owns Task State, iteration checkpoints, and stage validation**; Codex implements only authorized changes; the human owns final review, commits, merges, and execution approval. The monitor never changes task state.
 
 ## Three n8n workflows
@@ -50,6 +59,22 @@ flowchart TD
 | [Error Alert via SMTP](workflows/03-error-alert.public-demo.json) | Reports technical n8n failures | Error Trigger, minimal diagnostic email, no raw execution payload in the alert |
 
 The orchestrator also has a **terminal-status email branch** for cases such as `HUMAN_REQUIRED`, `RECOVERY_REQUIRED`, `READY_FOR_REVIEW`, `FAILED`, and quota pauses. These are notifications, **not approvals**.
+
+
+### Live Task Monitoring
+
+The read-only monitoring workflow polls the Worker API every 15 seconds, displays the current task progress, and stops when a terminal condition is reached.
+
+![Live Task Monitor](assets/live-monitor.png)
+
+### Real Execution Status
+
+Example of the monitor processing a running task and displaying the current stage, completed stages, iteration details, and the next action.
+
+![Live Monitor Execution Status](assets/monitor-status.png)
+
+*Historical screenshots from the operational Deckdrive automation. The status example shows a later task than DD-GAME-13-003. These are not execution results from the public demo exports.*
+
 
 ## Notable engineering decisions
 
